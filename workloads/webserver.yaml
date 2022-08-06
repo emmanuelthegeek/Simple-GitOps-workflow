@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-workflow
+  namespace: gitops-workflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gitops-workflow-app
+  template:
+    metadata:
+      labels:
+        app: gitops-workflow-app
+    spec:
+      containers:
+        - name: gitops-workflow-container
+          # This is the line that gets update automatically by the GitHub action in gitops-workflow-app
+          image: docker.io/imiell/gitops-workflow-app:26a0b2e77800d1bcdbeeb1ba63b4b4ddcd641168
+          command:
+            - python
+            - -m
+            - http.server
+          ports:
+            - containerPort: 8000
+      imagePullSecrets:
+        - name: regcred            # These are the creds we set up by hand earlier.
+---
+# https://kubernetes.io/docs/concepts/services-networking/service/
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitops-workflow-service-service
+  namespace: gitops-workflow
+spec:
+  selector:
+    app: gitops-workflow-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

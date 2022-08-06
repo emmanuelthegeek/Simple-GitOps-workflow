@@ -1,0 +1,25 @@
+name: Update and close raised issues
+on:
+  repository_dispatch:
+    types: gitops-workflow-app-trigger
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out The Repository
+        uses: actions/checkout@v2
+      - name: Comment a raised issue as stale after 1 day
+        if: ${{ github.event.client_payload.sha }}
+        run: |
+          sed -i "s@\(.*image:\).*@\1 docker.io/${{secrets.DOCKER_USER}}/gitops-workflow-app:${{ github.event.client_payload.sha }}@" ${GITHUB_WORKSPACE}/workloads/webserver.yaml
+      - name: Close the issue after 2 days
+        uses: stefanzweifel/git-auto-commit-action@v4
+        if: ${{ github.event.client_payload.sha }}
+        with:
+          commit_message: simple GitOps workflow
+          branch: master
+          commit_options: '--no-verify --signoff'
+          repository: .
+          commit_user_name: emmanuelthegeek
+          commit_user_email: emmanueldada12@gmail.com
+          commit_author: Emmanuel Dada
